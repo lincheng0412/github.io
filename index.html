@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100万存钱计划 - 2000格×500元</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",sans-serif;}
+body{background:#f5f7fa;padding:20px 10px;}
+.container{max-width:1200px;margin:0 auto;}
+.header{text-align:center;margin-bottom:20px;}
+.header h1{font-size:24px;color:#333;margin-bottom:8px;}
+.header .info{color:#666;font-size:14px;margin-bottom:10px;}
+.progress-box{background:#fff;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.progress-text{display:flex;justify-content:space-between;font-size:14px;color:#333;margin-bottom:8px;}
+.bar{height:12px;background:#eee;border-radius:6px;overflow:hidden;}
+.bar-inner{height:100%;background:#42b983;width:0%;transition:width 0.3s;}
+.btns{text-align:center;margin-bottom:15px;}
+.btns button{padding:6px 14px;margin:0 5px;border:none;background:#42b983;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;}
+.btns button.del{background:#ff6b6b;}
+.grid{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;}
+.cell{aspect-ratio:1/1;background:#fff;border:1px solid #ddd;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;user-select:none;transition:0.2s;}
+.cell.checked{background:#42b983;color:#fff;border-color:#42b983;text-decoration:line-through;}
+@media(max-width:768px){
+.grid{grid-template-columns:repeat(10,1fr);}
+.cell{font-size:9px;}}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="header">
+    <h1>100万存钱计划</h1>
+    <div class="info">2000 格 × 500 元 | 每存一笔点一下</div>
+  </div>
+
+  <div class="progress-box">
+    <div class="progress-text">
+      <div>已完成：<span id="done">0</span>/2000 格</div>
+      <div>已存：<span id="money">0</span> 元</div>
+    </div>
+    <div class="bar">
+      <div class="bar-inner" id="bar"></div>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="del" onclick="clearAll()">清空所有勾选</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const grid = document.getElementById('grid');
+const doneEl = document.getElementById('done');
+const moneyEl = document.getElementById('money');
+const barEl = document.getElementById('bar');
+
+const total = 2000;
+const cellElements = [];
+
+// 读取本地保存
+let saved = JSON.parse(localStorage.getItem('savePlan_100w') || '[]');
+
+for(let i=1; i<=total; i++){
+  const d = document.createElement('div');
+  d.className = 'cell';
+  d.textContent = i;
+  d.dataset.index = i;
+  d.onclick = toggleCheck;
+  grid.appendChild(d);
+  cellElements.push(d);
+}
+
+// 恢复勾选状态
+saved.forEach(idx => {
+  const el = document.querySelector(`.cell[data-index="${idx}"]`);
+  if(el) el.classList.add('checked');
+});
+
+updateProgress();
+
+// 切换勾选
+function toggleCheck(){
+  this.classList.toggle('checked');
+  saveState();
+  updateProgress();
+}
+
+// 保存到本地
+function saveState(){
+  const checked = Array.from(document.querySelectorAll('.cell.checked'))
+    .map(el => parseInt(el.dataset.index));
+  localStorage.setItem('savePlan_100w', JSON.stringify(checked));
+}
+
+// 更新进度
+function updateProgress(){
+  const count = document.querySelectorAll('.cell.checked').length;
+  const money = count * 500;
+  doneEl.textContent = count;
+  moneyEl.textContent = money.toLocaleString();
+  barEl.style.width = (count / total * 100) + '%';
+}
+
+// 清空所有
+function clearAll(){
+  if(!confirm('确定清空所有记录？此操作不可恢复！')) return;
+  
+  document.querySelectorAll('.cell.checked').forEach(el => {
+    el.classList.remove('checked');
+  });
+  
+  localStorage.removeItem('savePlan_100w');
+  updateProgress();
+}
+</script>
+</body>
+</html>

@@ -1,120 +1,412 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>100万存钱计划 - 2000格×500元</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",sans-serif;}
-body{background:#f5f7fa;padding:20px 10px;}
-.container{max-width:1200px;margin:0 auto;}
-.header{text-align:center;margin-bottom:20px;}
-.header h1{font-size:24px;color:#333;margin-bottom:8px;}
-.header .info{color:#666;font-size:14px;margin-bottom:10px;}
-.progress-box{background:#fff;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-.progress-text{display:flex;justify-content:space-between;font-size:14px;color:#333;margin-bottom:8px;}
-.bar{height:12px;background:#eee;border-radius:6px;overflow:hidden;}
-.bar-inner{height:100%;background:#42b983;width:0%;transition:width 0.3s;}
-.btns{text-align:center;margin-bottom:15px;}
-.btns button{padding:6px 14px;margin:0 5px;border:none;background:#42b983;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;}
-.btns button.del{background:#ff6b6b;}
-.grid{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;}
-.cell{aspect-ratio:1/1;background:#fff;border:1px solid #ddd;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;user-select:none;transition:0.2s;}
-.cell.checked{background:#42b983;color:#fff;border-color:#42b983;text-decoration:line-through;}
-@media(max-width:768px){
-.grid{grid-template-columns:repeat(10,1fr);}
-.cell{font-size:9px;}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜词游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .game-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .title {
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .setting-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #1677ff;
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        #guessInput {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .submit-btn {
+            padding: 12px 20px;
+            background: #1677ff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .total-count {
+            font-size: 14px;
+            color: #1677ff;
+            font-weight: bold;
+        }
+        .tip {
+            text-align: right;
+            color: #888;
+            font-size: 14px;
+        }
+        .list {
+            background: #f9f9f9;
+            border-radius: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .item:last-child { border-bottom: none; }
+        .item.correct { background: #fff5d0; font-weight: bold; }
+        .word { color: #333; }
+        .rate { color: #666; }
+        .result {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 18px;
+            color: #00b42a;
+            font-weight: bold;
+        }
+        .restart {
+            margin-top: 16px;
+            width: 100%;
+            padding: 12px;
+            background: #00b42a;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-mask {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal {
+            background: #fff;
+            width: 90%;
+            max-width: 460px;
+            border-radius: 12px;
+            padding: 24px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .form-item {
+            margin-bottom: 14px;
+        }
+        .form-item input,
+        .form-item textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .form-item textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btns button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-add {
+            background: #1677ff;
+            color: #fff;
+            border: none;
+        }
+        .btn-close {
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+        }
+        .q-list {
+            margin-top: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        .q-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .q-item span {
+            cursor: pointer;
+            color: #1677ff;
+            margin-left: 8px;
+        }
+        .admin-area {
+            display: none;
+        }
+    </style>
 </head>
-
 <body>
-<div class="container">
-  <div class="header">
-    <h1>100万存钱计划</h1>
-    <div class="info">2000 格 × 500 元 | 每存一笔点一下</div>
-  </div>
 
-  <div class="progress-box">
-    <div class="progress-text">
-      <div>已完成：<span id="done">0</span>/2000 格</div>
-      <div>已存：<span id="money">0</span> 元</div>
+<div class="game-box">
+    <button class="setting-btn" onclick="openModal()">⚙️</button>
+    <h2 class="title">猜词游戏</h2>
+
+    <div class="input-row">
+        <input type="text" id="guessInput" placeholder="输入猜测的词语" autocomplete="off">
+        <button class="submit-btn" onclick="doGuess()">猜测</button>
     </div>
-    <div class="bar">
-      <div class="bar-inner" id="bar"></div>
+
+    <div class="info-row">
+        <div class="total-count" id="totalCount">本轮已猜：0 次</div>
+        <div class="tip">概率越高越接近答案</div>
     </div>
-  </div>
 
-  <div class="btns">
-    <button class="del" onclick="clearAll()">清空所有勾选</button>
-  </div>
+    <div class="list" id="list"></div>
+    <div class="result" id="result"></div>
 
-  <div class="grid" id="grid"></div>
+    <button class="restart" onclick="nextRandom()">随机下一题</button>
+</div>
+
+<div class="modal-mask" id="modal">
+    <div class="modal">
+        <h3>设置</h3>
+        <div class="form-item">
+            <input type="password" id="adminPwd" placeholder="">
+        </div>
+        <button onclick="checkPwd()" style="width:100%;padding:10px;margin-bottom:16px;">确定</button>
+
+        <div id="adminArea" class="admin-area">
+            <div class="form-item">
+                <input type="text" id="customAnswer" placeholder="正确答案">
+            </div>
+            <div class="form-item">
+                <textarea id="customRelated" placeholder="相关词，用逗号/空格分隔"></textarea>
+            </div>
+            <div class="btns">
+                <button class="btn-add" onclick="addOrUpdateQuestion()">保存题目</button>
+                <button class="btn-close" onclick="closeModal()">关闭</button>
+            </div>
+            <div style="margin-top:20px;">
+                <div class="q-list" id="questionListEl"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-const grid = document.getElementById('grid');
-const doneEl = document.getElementById('done');
-const moneyEl = document.getElementById('money');
-const barEl = document.getElementById('bar');
+const STORAGE_KEY = "guess_word_questions";
+let editIndex = -1;
 
-const total = 2000;
-const cellElements = [];
-
-// 读取本地保存
-let saved = JSON.parse(localStorage.getItem('savePlan_100w') || '[]');
-
-for(let i=1; i<=total; i++){
-  const d = document.createElement('div');
-  d.className = 'cell';
-  d.textContent = i;
-  d.dataset.index = i;
-  d.onclick = toggleCheck;
-  grid.appendChild(d);
-  cellElements.push(d);
+function checkPwd() {
+    const pwd = document.getElementById("adminPwd").value.trim();
+    if (pwd === "666") {
+        document.getElementById("adminArea").style.display = "block";
+        renderQuestionList();
+    }
 }
 
-// 恢复勾选状态
-saved.forEach(idx => {
-  const el = document.querySelector(`.cell[data-index="${idx}"]`);
-  if(el) el.classList.add('checked');
+function loadQuestions() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [{ answer: "青海", related: ["海","大海","海洋","湖泊","沙滩","河流","南海"] }];
+}
+function saveQuestions(qs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(qs));
+}
+
+let questions = loadQuestions();
+let current = null;
+let guessHistory = [];
+
+function randomQuestion() {
+    return questions.length ? questions[Math.floor(Math.random() * questions.length)] : null;
+}
+
+function renderQuestionList() {
+    const el = document.getElementById("questionListEl");
+    el.innerHTML = "";
+    questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "q-item";
+        div.innerHTML = `
+            <span>${q.answer}</span>
+            <div>
+                <span onclick="editQuestion(${i})">修改</span>
+                <span onclick="delQuestion(${i})">删除</span>
+            </div>
+        `;
+        el.appendChild(div);
+    });
+}
+
+function editQuestion(index) {
+    editIndex = index;
+    const q = questions[index];
+    document.getElementById("customAnswer").value = q.answer;
+    document.getElementById("customRelated").value = q.related.join("，");
+}
+
+function addOrUpdateQuestion() {
+    const ans = document.getElementById("customAnswer").value.trim();
+    const relText = document.getElementById("customRelated").value.trim();
+    if (!ans || !relText) { return; }
+    const arr = relText.split(/[，,、\s]+/).filter(x => x.trim());
+    
+    if (editIndex >= 0) {
+        questions[editIndex] = { answer: ans, related: arr };
+        editIndex = -1;
+    } else {
+        questions.push({ answer: ans, related: arr });
+    }
+    
+    saveQuestions(questions);
+    renderQuestionList();
+    document.getElementById("customAnswer").value = "";
+    document.getElementById("customRelated").value = "";
+}
+
+function delQuestion(index) {
+    if (!confirm("确定删除？")) return;
+    questions.splice(index, 1);
+    saveQuestions(questions);
+    renderQuestionList();
+}
+
+function openModal() {
+    editIndex = -1;
+    document.getElementById("adminArea").style.display = "none";
+    document.getElementById("adminPwd").value = "";
+    document.getElementById("modal").style.display = "flex";
+}
+function closeModal() {
+    document.getElementById("modal").style.display = "none";
+}
+
+function sim(a, b) {
+    let s = 0;
+    const sa = new Set(a.split(""));
+    const sb = new Set(b.split(""));
+    sa.forEach(c => sb.has(c) && s++);
+    return (s / Math.max(sa.size, sb.size)) * 100;
+}
+
+function renderList() {
+    if (!current) return;
+    const all = [...guessHistory, ...current.related];
+    const list = all.map(w => {
+        const s = sim(w, current.answer);
+        const rate = Math.min(100, s + Math.random() * 18);
+        return { w, rate };
+    }).sort((a, b) => b.rate - a.rate);
+
+    const dom = document.getElementById("list");
+    dom.innerHTML = "";
+    list.forEach(({ w, rate }) => {
+        const div = document.createElement("div");
+        div.className = "item" + (w === current.answer ? " correct" : "");
+        div.innerHTML = `<span class="word">${w}</span><span class="rate">${rate.toFixed(1)}%</span>`;
+        dom.appendChild(div);
+    });
+}
+
+function updateTotalCount() {
+    document.getElementById("totalCount").textContent = `本轮已猜：${guessHistory.length} 次`;
+}
+
+function doGuess() {
+    if (!current) return;
+    const ipt = document.getElementById("guessInput");
+    const val = ipt.value.trim();
+    if (!val) return;
+
+    if (guessHistory.includes(val)) {
+        document.getElementById("totalCount").textContent = `本轮已猜：${guessHistory.length} 次（已猜过）`;
+        ipt.value = "";
+        return;
+    }
+
+    document.getElementById("totalCount").textContent = `本轮已猜：${guessHistory.length} 次`;
+    guessHistory.push(val);
+    updateTotalCount();
+    renderList();
+    if (val === current.answer) {
+        document.getElementById("result").innerText = `🎉 恭喜猜对！答案：${val}`;
+    } else {
+        document.getElementById("result").innerText = "";
+    }
+    ipt.value = "";
+}
+
+function nextRandom() {
+    current = randomQuestion();
+    guessHistory = [];
+    updateTotalCount();
+    document.getElementById("result").innerText = "";
+    document.getElementById("list").innerHTML = "";
+    document.getElementById("guessInput").value = "";
+}
+
+document.getElementById("guessInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") doGuess();
 });
 
-updateProgress();
-
-// 切换勾选
-function toggleCheck(){
-  this.classList.toggle('checked');
-  saveState();
-  updateProgress();
-}
-
-// 保存到本地
-function saveState(){
-  const checked = Array.from(document.querySelectorAll('.cell.checked'))
-    .map(el => parseInt(el.dataset.index));
-  localStorage.setItem('savePlan_100w', JSON.stringify(checked));
-}
-
-// 更新进度
-function updateProgress(){
-  const count = document.querySelectorAll('.cell.checked').length;
-  const money = count * 500;
-  doneEl.textContent = count;
-  moneyEl.textContent = money.toLocaleString();
-  barEl.style.width = (count / total * 100) + '%';
-}
-
-// 清空所有
-function clearAll(){
-  if(!confirm('确定清空所有记录？此操作不可恢复！')) return;
-  
-  document.querySelectorAll('.cell.checked').forEach(el => {
-    el.classList.remove('checked');
-  });
-  
-  localStorage.removeItem('savePlan_100w');
-  updateProgress();
-}
+nextRandom();
 </script>
 </body>
 </html>
